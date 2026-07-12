@@ -1,76 +1,37 @@
-# QuantSage User Guide
+# QuantSage — User Guide
 
-This guide covers all commands, configuration options, dataset layout, and how to use QuantSage.
+## What is it?
 
----
+QuantSage is a CLI that answers: **given my model, my hardware, my workload shape, and my budget for tail latency and quality loss — which inference engine, quantization algorithm, and bit-width scheme should I use, and how do I run it?**
 
-## What it Decides
-
-QuantSage evaluates and recommends configuration options across three distinct decisions:
-
-1. **Inference Engine**: `vllm` | `sglang` | `tensorrt-llm` | `mlx`
-2. **Quantization Algorithm**: `gptq` | `awq` | `smoothquant` | `fp8` | `mlx-quant` | `none`
-3. **Bit-width Scheme**: `w4a16` | `w8a8` | `q4` | `q8` | `fp16`
+It looks up real benchmark data and returns a recommendation with a confidence label.
 
 ---
 
-## Installation
+## What it supports
+
+| Feature | Notes |
+|---------|-------|
+| Workload shape matching | Prioritizes runs matching your prompt/output tokens |
+| Tail Latency budgets | Checks `--max-latency` against p95, not p50 or mean |
+| Confidence Downgrading | Marks as `(low sample)` when backing eval sample size < 50 |
+| serving configs | Generates launch commands for vLLM, SGLang, TensorRT-LLM, and MLX |
+| Local config file | `~/.quantsage/config.yaml` for defaults |
+| Contributing runs | Append logs or run live benchmarks |
+
+---
+
+## User Journey
+
+### 1. Install
 
 ```bash
-git clone https://github.com/aakriti1318/quantsage
-cd quantsage
 pip install -e .
 ```
 
-### Extras
-- `pip install -e ".[advanced]"`: Enables regression-based interpolation (pandas, scikit-learn).
-- `pip install -e ".[benchmark]"`: Enables live benchmarking (guidellm, lm-eval).
-
 ---
 
-## Command Reference
-
-### 1. `recommend`
-Find the best engine, algorithm, and scheme matching your hardware, size, and workload.
-
-```bash
-quantsage recommend --model-size 7b --hardware a100-40gb \
-  --prompt-tokens 512 --output-tokens 256 \
-  --max-latency 200ms --min-quality 98 \
-  --prefer-engine sglang
-```
-
-- `--max-latency`: Validated against tail latency (**p95 TTFT**), not the mean.
-- Workload shapes (`--prompt-tokens` / `--output-tokens`): Automatically finds the closest matching shape.
-- Confidence levels:
-  - `exact`: Match found. Downgraded to `exact (low sample)` if the evaluation sample count is less than 50.
-  - `interpolated`: Estimated via linear regression.
-  - `no_data`: No matches or similar runs found.
-
-### 2. `serve-config`
-Generate copy-pasteable serving commands and configuration files.
-
-```bash
-quantsage serve-config --model-size 7b --hardware a100-40gb \
-  --model meta-llama/Meta-Llama-3-8B-Instruct --prefer-engine sglang
-```
-
-- Supports outputting YAML configs (vLLM only) with `--out config.yaml`.
-- Handles platform-specific execution commands for SGLang, vLLM, TensorRT-LLM, and MLX.
-
-### 3. `contribute`
-Add your own benchmark runs to your local database.
-
-```bash
-# Add from a JSON file
-quantsage contribute --run-log my_run.json
-
-# Run live benchmark measurements (requires [benchmark] extra)
-quantsage contribute --benchmark --model-size 8b --hardware a100-40gb \
-  --engine vllm --quant-algo awq --model meta-llama/Meta-Llama-3-8B-Instruct
-```
-
-### 4. Database Exploration
+### 2. Check coverage
 
 ```bash
 quantsage list-hardware
@@ -80,34 +41,77 @@ quantsage list-quant-algos
 
 ---
 
-## Configuration File (`~/.quantsage/config.yaml`)
+### 3. Get a recommendation
 
-Define default settings for your workspace:
+```bash
+quantsage recommend --model-size 7b --hardware a100-40gb --prompt-tokens 512 --output-tokens 256
+```
 
-```yaml
-default_hardware: a100-40gb
-min_quality_default: 97
-default_eval_method: mmlu-5shot
-dataset_path: ~/.quantsage/benchmarks.csv
+Output:
+```
+Recommended: VLLM + none (fp16), prefix caching off
+Workload: 512 in / 256 out tokens
+Expected: 85ms TTFT (p50) · 140ms TTFT (p95) · 45.0 tok/s · +0.0% quality (mmlu-5shot, n=200)
+Confidence: exact (5 matching benchmark runs)
+
+Note (Engine): vLLM is highly optimized for throughput, features PagedAttention, and has broad hardware/model support.
+Note (Algo): FP16/BF16 unquantized baseline.
+```
+
+Filter by engine:
+```bash
+quantsage recommend --model-size 7b --hardware a100-40gb --prefer-engine sglang
 ```
 
 ---
 
-## Dataset Schema (`data/benchmarks.csv`)
+### 4. Generate serving configs
 
-| Column | Description |
-|---|---|
-| `model_size_b` | Model size in billions |
-| `hardware` | Target hardware name (e.g. `rtx-4090`) |
-| `inference_engine` | Serving stack (`vllm`, `sglang`, `mlx`) |
-| `quant_algo` | Method (`awq`, `gptq`, `fp8`, `none`) |
-| `quant_scheme` | Width format (`w4a16`, `fp16`) |
-| `prompt_tokens` / `output_tokens` | Workload shape during benchmark |
-| `prefix_caching` | Boolean string (`true`/`false`) |
-| `ttft_p50_ms` / `ttft_p95_ms` | Median and tail latencies |
-| `throughput_tok_s` | Tokens per second |
-| `task_score_delta` | Quality change percentage vs FP16 baseline |
-| `eval_method` | Grounding benchmark (e.g. `mmlu-5shot`) |
-| `eval_sample_size` | Evaluation sample count |
-| `vram_gb` | VRAM utilization |
-| `source` | Measurement source |
+```bash
+quantsage serve-config \
+  --model-size 7b \
+  --hardware a100-40gb \
+  --model meta-llama/Meta-Llama-3-8B-Instruct \
+  --prefer-engine sglang
+```
+
+Output:
+```
+Recommended: SGLANG + AWQ (w4a16), prefix caching on
+Workload: 512 in / 256 out tokens
+Expected: 98ms TTFT (p50) · 165ms TTFT (p95) · 52.0 tok/s · -1.4% quality (mmlu-5shot, n=200)
+Confidence: exact
+
+Platform: sglang
+
+Launch command:
+  python -m sglang.launch_server --model-path meta-llama/Meta-Llama-3-8B-Instruct --quantization awq --host 0.0.0.0 --port 30000
+```
+
+---
+
+### 5. Contribute your own benchmark data
+
+Append a JSON log file:
+```bash
+quantsage contribute --run-log my_run.json
+```
+
+Or run the benchmarks directly via QuantSage:
+```bash
+quantsage contribute --benchmark --model-size 13b --hardware a100-40gb \
+  --engine sglang --quant-algo awq --model your-org/your-model
+```
+
+---
+
+## CLI Reference
+
+```
+quantsage recommend    --model-size SIZE --hardware HW [--max-latency MS] [--min-quality PCT] [--prompt-tokens INT] [--output-tokens INT] [--prefer-engine ENG]
+quantsage serve-config --model-size SIZE --hardware HW --model NAME [--out FILE] [--min-quality PCT] [--max-latency MS] [--prompt-tokens INT] [--output-tokens INT] [--prefer-engine ENG]
+quantsage list-hardware
+quantsage list-engines
+quantsage list-quant-algos
+quantsage contribute   [--run-log FILE] [--benchmark --model-size SIZE --hardware HW --engine ENG --quant-algo ALGO --model NAME]
+```

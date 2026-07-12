@@ -12,18 +12,17 @@ license = "MIT"
 keywords = ["quantization", "llm", "inference", "vllm", "mlx", "serving"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-
-[project.urls]
-Homepage = "https://github.com/aakritiaggarwal/quantsage"
-Repository = "https://github.com/aakritiaggarwal/quantsage"
 
 dependencies = [
     "typer>=0.9.0",
     "pyyaml>=6.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/aakritiaggarwal/quantsage"
+Repository = "https://github.com/aakritiaggarwal/quantsage"
 
 [project.optional-dependencies]
 dev = [
