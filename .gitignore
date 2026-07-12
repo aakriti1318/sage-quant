@@ -1,0 +1,22 @@
+# SKILL.md (specifically ignored as requested)
+SKILL.md
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints
+
+# Packaging and distribution
+dist/
+build/
+*.egg-info/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# System files
+.DS_Store
