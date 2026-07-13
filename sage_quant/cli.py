@@ -365,6 +365,8 @@ def list_quant_algos_cmd(
 @app.command(name="contribute")
 def contribute_cmd(
     run_log: Optional[str] = typer.Option(None, "--run-log", "-r", help="Path to JSON or CSV run log"),
+    name: Optional[str] = typer.Option(None, "--name", help="Contributor name / Github username"),
+    description: Optional[str] = typer.Option(None, "--description", help="Description of the benchmark run setup"),
     config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config.yaml")
 ):
     """
@@ -372,13 +374,19 @@ def contribute_cmd(
 
     Accepts a JSON file (single dict or list of dicts) or CSV file.
     Each row must include all required benchmark fields.
-
-    To share your results back with the community, open a PR to the repository
-    after appending your data.
     """
     if not run_log:
         typer.echo("Error: --run-log is required. Provide a JSON or CSV file with your benchmark data.", err=True)
         raise typer.Exit(code=1)
+
+    # Prompt for name and description if not provided
+    contrib_name = name
+    if not contrib_name:
+        contrib_name = typer.prompt("Enter your name / GitHub username", default="Anonymous")
+    
+    contrib_desc = description
+    if not contrib_desc:
+        contrib_desc = typer.prompt("Enter a description of this run (e.g. system setup, special conditions)", default="None")
 
     config = load_config(config_path)
     # IMPORTANT: contribute always writes to the user's local path (~/.sage-quant/)
@@ -417,12 +425,38 @@ def contribute_cmd(
 
     typer.echo(f"Successfully appended {success_count} benchmark run(s) to the dataset at {dataset_path}!")
     typer.echo("")
+    
+    # Generate Pre-filled GitHub Issue URL
+    import urllib.parse
+    runs_formatted = json.dumps(runs, indent=2)
+    issue_body = f"""### Contributor Name / GitHub Username
+{contrib_name}
+
+### Setup Description
+{contrib_desc}
+
+### Contributed Benchmark Data (JSON)
+```json
+{runs_formatted}
+```
+"""
+    title_encoded = urllib.parse.quote(f"Benchmark Contribution: {contrib_name}")
+    body_encoded = urllib.parse.quote(issue_body)
+    github_issue_url = f"https://github.com/aakriti1318/sage-quant/issues/new?title={title_encoded}&body={body_encoded}"
+
     typer.echo("To share your results back with the community:")
+    typer.echo("")
+    typer.echo("Option A: Zero-Friction GitHub Issue (Recommended)")
+    typer.echo("Click the link below to open a pre-filled issue with your benchmark data:")
+    typer.echo(f"👉 {github_issue_url}")
+    typer.echo("")
+    typer.echo("Option B: Pull Request (Direct Integration)")
     typer.echo("1. Fork the repository: https://github.com/aakriti1318/sage-quant")
     typer.echo("2. Create a new branch: git checkout -b add-my-benchmarks")
     typer.echo("3. Copy your additions to data/benchmarks.csv")
     typer.echo("4. Commit and push: git push origin add-my-benchmarks")
     typer.echo("5. Open a Pull Request on GitHub.")
+
 
 
 def main():
