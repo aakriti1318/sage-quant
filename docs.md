@@ -53,14 +53,36 @@ Recommended: VLLM + none (fp16), prefix caching off
 Workload: 512 in / 256 out tokens
 Expected: 85ms TTFT (p50) · 140ms TTFT (p95) · 45.0 tok/s · +0.0% quality (mmlu-5shot, n=200)
 Confidence: exact (5 matching benchmark runs)
-
-Note (Engine): vLLM is highly optimized for throughput, features PagedAttention, and has broad hardware/model support.
-Note (Algo): FP16/BF16 unquantized baseline.
 ```
 
-Filter by engine:
+---
+
+## Example Scenarios to Try
+
+Here are common real-world serving constraints you can solve with SageQuant:
+
+### Scenario A: Zero Quality Loss Allowed (FP16 Baseline)
+Find the best engine that guarantees 100% quality retention (no quantization artifacts):
 ```bash
-sage-quant recommend --model-size 7b --hardware a100-40gb --prefer-engine sglang
+sage-quant recommend --model-size 7b --hardware rtx-4090 --min-quality 100
+```
+
+### Scenario B: Restrict serving to SGLang
+Optimize the quantization scheme while enforcing SGLang as the serving engine:
+```bash
+sage-quant recommend --model-size 8b --hardware a100-40gb --prefer-engine sglang
+```
+
+### Scenario C: High-Throughput Edge Serving on Mac (Apple Silicon)
+Find what fits on Apple M1 Pro within a tail-latency budget of 350ms:
+```bash
+sage-quant recommend --model-size 7b --hardware m1-pro --max-latency 350ms
+```
+
+### Scenario D: Generate MLX Config for Apple Silicon
+Generate MLX serving instructions directly:
+```bash
+sage-quant serve-config --model-size 7b --hardware m1-pro --model mlx-community/Llama-3-8B-Instruct-4bit
 ```
 
 ---

@@ -74,6 +74,12 @@ sage-quant serve-config --model-size 7b --hardware a100-40gb --model meta-llama/
 
 ---
 
+## Documentation
+
+For a comprehensive guide, detailed command usage, and real-world example scenarios, see the [User Guide](docs.md).
+
+---
+
 ## License
 
 MIT
