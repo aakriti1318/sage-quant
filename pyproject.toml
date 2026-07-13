@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "quantsage"
+name = "sage-quant"
 version = "0.1.0"
-description = "QuantSage: Open-source inference tradeoff calculator and quantization advisor"
+description = "SageQuant: Open-source inference tradeoff calculator and quantization advisor"
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
@@ -21,8 +21,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/aakritiaggarwal/quantsage"
-Repository = "https://github.com/aakritiaggarwal/quantsage"
+Homepage = "https://github.com/aakriti1318/sage-quant"
+Repository = "https://github.com/aakriti1318/sage-quant"
 
 [project.optional-dependencies]
 dev = [
@@ -35,7 +35,7 @@ advanced = [
 ]
 
 [tool.setuptools]
-packages = ["quantsage"]
+packages = ["sage_quant"]
 
 [project.scripts]
-quantsage = "quantsage.cli:main"
+sage-quant = "sage_quant.cli:main"

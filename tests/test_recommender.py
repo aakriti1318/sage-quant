@@ -1,6 +1,6 @@
 import pytest
-from quantsage.models import Constraint
-from quantsage.recommender import recommend
+from sage_quant.models import Constraint
+from sage_quant.recommender import recommend
 
 TEST_DATASET = [
     {

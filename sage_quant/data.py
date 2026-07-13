@@ -33,7 +33,7 @@ def load_dataset(path: str) -> List[Dict[str, Any]]:
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     if config_path is None:
-        config_path = os.path.expanduser("~/.quantsage/config.yaml")
+        config_path = os.path.expanduser("~/.sage_quant/config.yaml")
     if not os.path.exists(config_path):
         return {}
     try:

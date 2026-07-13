@@ -1,8 +1,8 @@
-# QuantSage — User Guide
+# SageQuant — User Guide
 
 ## What is it?
 
-QuantSage is a CLI that answers: **given my model, my hardware, my workload shape, and my budget for tail latency and quality loss — which inference engine, quantization algorithm, and bit-width scheme should I use, and how do I run it?**
+SageQuant is a CLI that answers: **given my model, my hardware, my workload shape, and my budget for tail latency and quality loss — which inference engine, quantization algorithm, and bit-width scheme should I use, and how do I run it?**
 
 It looks up real benchmark data and returns a recommendation with a confidence label.
 
@@ -16,7 +16,7 @@ It looks up real benchmark data and returns a recommendation with a confidence l
 | Tail Latency budgets | Checks `--max-latency` against p95, not p50 or mean |
 | Confidence Downgrading | Marks as `(low sample)` when backing eval sample size < 50 |
 | serving configs | Generates launch commands for vLLM, SGLang, TensorRT-LLM, and MLX |
-| Local config file | `~/.quantsage/config.yaml` for defaults |
+| Local config file | `~/.sage-quant/config.yaml` for defaults |
 | Contributing runs | Append logs or run live benchmarks |
 
 ---
@@ -34,9 +34,9 @@ pip install -e .
 ### 2. Check coverage
 
 ```bash
-quantsage list-hardware
-quantsage list-engines
-quantsage list-quant-algos
+sage-quant list-hardware
+sage-quant list-engines
+sage-quant list-quant-algos
 ```
 
 ---
@@ -44,7 +44,7 @@ quantsage list-quant-algos
 ### 3. Get a recommendation
 
 ```bash
-quantsage recommend --model-size 7b --hardware a100-40gb --prompt-tokens 512 --output-tokens 256
+sage-quant recommend --model-size 7b --hardware a100-40gb --prompt-tokens 512 --output-tokens 256
 ```
 
 Output:
@@ -60,7 +60,7 @@ Note (Algo): FP16/BF16 unquantized baseline.
 
 Filter by engine:
 ```bash
-quantsage recommend --model-size 7b --hardware a100-40gb --prefer-engine sglang
+sage-quant recommend --model-size 7b --hardware a100-40gb --prefer-engine sglang
 ```
 
 ---
@@ -68,7 +68,7 @@ quantsage recommend --model-size 7b --hardware a100-40gb --prefer-engine sglang
 ### 4. Generate serving configs
 
 ```bash
-quantsage serve-config \
+sage-quant serve-config \
   --model-size 7b \
   --hardware a100-40gb \
   --model meta-llama/Meta-Llama-3-8B-Instruct \
@@ -94,12 +94,12 @@ Launch command:
 
 Append a JSON log file:
 ```bash
-quantsage contribute --run-log my_run.json
+sage-quant contribute --run-log my_run.json
 ```
 
-Or run the benchmarks directly via QuantSage:
+Or run the benchmarks directly via SageQuant:
 ```bash
-quantsage contribute --benchmark --model-size 13b --hardware a100-40gb \
+sage-quant contribute --benchmark --model-size 13b --hardware a100-40gb \
   --engine sglang --quant-algo awq --model your-org/your-model
 ```
 
@@ -108,10 +108,10 @@ quantsage contribute --benchmark --model-size 13b --hardware a100-40gb \
 ## CLI Reference
 
 ```
-quantsage recommend    --model-size SIZE --hardware HW [--max-latency MS] [--min-quality PCT] [--prompt-tokens INT] [--output-tokens INT] [--prefer-engine ENG]
-quantsage serve-config --model-size SIZE --hardware HW --model NAME [--out FILE] [--min-quality PCT] [--max-latency MS] [--prompt-tokens INT] [--output-tokens INT] [--prefer-engine ENG]
-quantsage list-hardware
-quantsage list-engines
-quantsage list-quant-algos
-quantsage contribute   [--run-log FILE] [--benchmark --model-size SIZE --hardware HW --engine ENG --quant-algo ALGO --model NAME]
+sage-quant recommend    --model-size SIZE --hardware HW [--max-latency MS] [--min-quality PCT] [--prompt-tokens INT] [--output-tokens INT] [--prefer-engine ENG]
+sage-quant serve-config --model-size SIZE --hardware HW --model NAME [--out FILE] [--min-quality PCT] [--max-latency MS] [--prompt-tokens INT] [--output-tokens INT] [--prefer-engine ENG]
+sage-quant list-hardware
+sage-quant list-engines
+sage-quant list-quant-algos
+sage-quant contribute   [--run-log FILE] [--benchmark --model-size SIZE --hardware HW --engine ENG --quant-algo ALGO --model NAME]
 ```

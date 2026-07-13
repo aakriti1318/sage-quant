@@ -5,13 +5,13 @@ import sys
 from typing import Optional, List, Dict, Any
 import typer
 
-from quantsage.data import load_dataset, load_config, append_run
-from quantsage.models import Constraint
-from quantsage.recommender import recommend
-from quantsage.serve_config import generate_serving_config
-from quantsage.catalog import get_engine_note, get_algo_note
+from sage_quant.data import load_dataset, load_config, append_run
+from sage_quant.models import Constraint
+from sage_quant.recommender import recommend
+from sage_quant.serve_config import generate_serving_config
+from sage_quant.catalog import get_engine_note, get_algo_note
 
-app = typer.Typer(help="QuantSage: Inference tradeoff calculator")
+app = typer.Typer(help="SageQuant: Inference tradeoff calculator")
 
 def parse_model_size(size_str: str) -> float:
     s = size_str.lower().strip()
@@ -332,7 +332,7 @@ def contribute_cmd(
     typer.echo(f"Successfully appended {success_count} benchmark run(s) to the dataset at {dataset_path}!")
     typer.echo("")
     typer.echo("To share your results back with the community:")
-    typer.echo("1. Fork the repository: https://github.com/aakritiaggarwal/quantsage")
+    typer.echo("1. Fork the repository: https://github.com/aakriti1318/sage-quant")
     typer.echo("2. Create a new branch: git checkout -b add-my-benchmarks")
     typer.echo("3. Copy your additions to data/benchmarks.csv")
     typer.echo("4. Commit and push: git push origin add-my-benchmarks")

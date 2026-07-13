@@ -1,6 +1,6 @@
 from collections import defaultdict
 from typing import List, Dict, Any, Optional
-from quantsage.models import Constraint, Recommendation
+from sage_quant.models import Constraint, Recommendation
 
 try:
     import numpy as np

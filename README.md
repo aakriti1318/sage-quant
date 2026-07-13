@@ -1,6 +1,6 @@
 ![alt text](assets/logo.png)
 
-QuantSage answers one question: **given my model, my hardware, and my latency/quality budget which inference engine, quantization algorithm, and bit-width scheme should I use, and how do I run it?**
+SageQuant answers one question: **given my model, my hardware, and my latency/quality budget which inference engine, quantization algorithm, and bit-width scheme should I use, and how do I run it?**
 
 It answers from real benchmark data, not guesswork.
 ---
@@ -9,7 +9,7 @@ It answers from real benchmark data, not guesswork.
 
 Picking a serving stack today usually looks like this: default to vLLM because it's what everyone uses, try W4A16 because a blog post said so, eyeball the output, ship it if nothing looks broken. Nobody actually compares vLLM against SGLang or TensorRT-LLM for their workload, or GPTQ against AWQ at the same bit-width — until a customer complains about quality, or the latency numbers don't add up.
 
-QuantSage replaces the guess with a lookup across three separate decisions — engine, quantization algorithm, and bit-width — each backed by measured runs, not a blog post written on a different GPU generation.
+SageQuant replaces the guess with a lookup across three separate decisions — engine, quantization algorithm, and bit-width — each backed by measured runs, not a blog post written on a different GPU generation.
 
 ## Who this is for
 
@@ -18,12 +18,12 @@ QuantSage replaces the guess with a lookup across three separate decisions — e
 - You're comparing vLLM, SGLang, or TensorRT-LLM for your actual workload and want data instead of GitHub star counts
 - You're on constrained hardware (edge, single GPU, Apple Silicon) and need to know what actually fits before you try
 
-**Before QuantSage:** default to vLLM + W4A16, hope it's right, repeat the exercise by hand if it isn't.
-**After QuantSage:** one command tells you which engine, which quant algorithm, and which bit-width hits your latency and quality bar — with the eval method and confidence level behind that answer.
+**Before SageQuant:** default to vLLM + W4A16, hope it's right, repeat the exercise by hand if it isn't.
+**After SageQuant:** one command tells you which engine, which quant algorithm, and which bit-width hits your latency and quality bar — with the eval method and confidence level behind that answer.
 
 ## See the tradeoff, not just an answer
 
-Same model, same hardware, same workload shape (512 prompt / 256 output tokens), across engines and algorithms — this is the kind of comparison QuantSage is built to shortcut:
+Same model, same hardware, same workload shape (512 prompt / 256 output tokens), across engines and algorithms — this is the kind of comparison SageQuant is built to shortcut:
 
 | Engine | Quant algo | Scheme | TTFT (p50 / p95) | Throughput | Quality vs fp16 |
 |--------|-----------|--------|-------------------|------------|------------------|
@@ -69,7 +69,7 @@ pip install -e ".[benchmark]"  # adds guidellm, lm-eval
 ### `recommend` — get a full recommendation: engine, algorithm, scheme
 
 ```bash
-quantsage recommend --model-size 7b --hardware a100-40gb
+sage-quant recommend --model-size 7b --hardware a100-40gb
 ```
 
 ```
@@ -79,9 +79,9 @@ Expected: 85ms TTFT (p50) · 140ms TTFT (p95) · 45.0 tok/s · +0.0% quality (mm
 Confidence: exact (3 matching benchmark runs)
 ```
 
-With constraints, including your actual workload shape — QuantSage will cross engines and algorithms to find the best fit:
+With constraints, including your actual workload shape — SageQuant will cross engines and algorithms to find the best fit:
 ```bash
-quantsage recommend \
+sage-quant recommend \
   --model-size 70b \
   --hardware a100-40gb \
   --max-latency 300ms \
@@ -91,9 +91,9 @@ quantsage recommend \
 
 `--max-latency` is checked against p95, not the mean — it's a budget for the bad case, not the average case. `--prompt-tokens`/`--output-tokens` default to 128/128 if omitted, but the answer can change meaningfully with workload shape, so it's worth setting explicitly if you know your real traffic pattern.
 
-Prefer a specific engine and let QuantSage only optimize the algorithm/scheme:
+Prefer a specific engine and let SageQuant only optimize the algorithm/scheme:
 ```bash
-quantsage recommend --model-size 7b --hardware a100-40gb --prefer-engine sglang
+sage-quant recommend --model-size 7b --hardware a100-40gb --prefer-engine sglang
 ```
 
 Confidence is always one of:
@@ -108,7 +108,7 @@ The quality number is always paired with the `eval_method` and the sample size i
 ### `serve-config` — get a copy-pasteable launch command for the recommended engine
 
 ```bash
-quantsage serve-config \
+sage-quant serve-config \
   --model-size 7b \
   --hardware a100-40gb \
   --model meta-llama/Meta-Llama-3-8B-Instruct
@@ -129,7 +129,7 @@ If SGLang or TensorRT-LLM is recommended, the launch command changes to match �
 
 For Apple Silicon:
 ```bash
-quantsage serve-config \
+sage-quant serve-config \
   --model-size 7b \
   --hardware m1-pro \
   --model mlx-community/Meta-Llama-3-8B-Instruct-4bit \
@@ -138,7 +138,7 @@ quantsage serve-config \
 
 Save the config to a file:
 ```bash
-quantsage serve-config --model-size 7b --hardware a100-40gb \
+sage-quant serve-config --model-size 7b --hardware a100-40gb \
   --model meta-llama/Meta-Llama-3-8B-Instruct --out config.yaml
 ```
 
@@ -147,7 +147,7 @@ quantsage serve-config --model-size 7b --hardware a100-40gb \
 ### `list-hardware` / `list-engines` / `list-quant-algos` — see what's in the dataset
 
 ```bash
-quantsage list-hardware
+sage-quant list-hardware
 ```
 ```
 a100-40gb
@@ -157,7 +157,7 @@ t4
 ```
 
 ```bash
-quantsage list-engines
+sage-quant list-engines
 ```
 ```
 vllm
@@ -167,7 +167,7 @@ mlx
 ```
 
 ```bash
-quantsage list-quant-algos
+sage-quant list-quant-algos
 ```
 ```
 gptq
@@ -183,7 +183,7 @@ none
 ### `contribute` — add your own benchmark runs
 
 ```bash
-quantsage contribute --run-log my_run.json
+sage-quant contribute --run-log my_run.json
 ```
 
 **`my_run.json`:**
@@ -206,9 +206,9 @@ quantsage contribute --run-log my_run.json
 
 Also accepts CSV. After appending, it prints instructions for opening a PR to share your data.
 
-If you installed the `[benchmark]` extra, you can skip the hand-filled JSON and let QuantSage run the measurement itself:
+If you installed the `[benchmark]` extra, you can skip the hand-filled JSON and let SageQuant run the measurement itself:
 ```bash
-quantsage contribute --benchmark --model-size 13b --hardware a100-40gb \
+sage-quant contribute --benchmark --model-size 13b --hardware a100-40gb \
   --engine sglang --quant-algo awq --model your-org/your-model
 ```
 This runs `guidellm` for latency/throughput and `lm-eval` for quality, then appends the result automatically.
@@ -219,13 +219,13 @@ The dataset only gets better with more contributors — if you've benchmarked an
 
 ## Optional: config file
 
-Create `~/.quantsage/config.yaml` to set defaults:
+Create `~/.sage-quant/config.yaml` to set defaults:
 
 ```yaml
 default_hardware: a100-40gb
 min_quality_default: 97
 default_eval_method: mmlu-5shot
-dataset_path: ~/.quantsage/benchmarks.csv   # point at your own data
+dataset_path: ~/.sage-quant/benchmarks.csv   # point at your own data
 ```
 
 CLI flags always override the config file.
@@ -261,7 +261,7 @@ All recommendations come from `data/benchmarks.csv`. Every row is one benchmark 
 
 ## How this differs from a quantization guide
 
-Most inference advice online picks one axis in isolation — "just use W4A16," or "vLLM is the standard" — written for one model on one GPU generation. QuantSage isn't advice — it's a lookup against measured runs across all three decisions at once (engine, algorithm, bit-width), so the answer changes correctly when your model, hardware, workload, or quality bar changes.
+Most inference advice online picks one axis in isolation — "just use W4A16," or "vLLM is the standard" — written for one model on one GPU generation. SageQuant isn't advice — it's a lookup against measured runs across all three decisions at once (engine, algorithm, bit-width), so the answer changes correctly when your model, hardware, workload, or quality bar changes.
 
 ## Contributing
 

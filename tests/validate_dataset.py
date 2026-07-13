@@ -1,6 +1,6 @@
 import sys
 import os
-from quantsage.data import load_dataset
+from sage_quant.data import load_dataset
 
 def main():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
