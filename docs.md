@@ -17,7 +17,7 @@ It looks up real benchmark data and returns a recommendation with a confidence l
 | Confidence Downgrading | Marks as `(low sample)` when backing eval sample size < 50 |
 | serving configs | Generates launch commands for vLLM, SGLang, TensorRT-LLM, and MLX |
 | Local config file | `~/.sage-quant/config.yaml` for defaults |
-| Contributing runs | Append logs or run live benchmarks |
+| Contributing runs | Append your own benchmark runs via JSON or CSV file |
 
 ---
 
@@ -119,12 +119,6 @@ Append a JSON log file:
 sage-quant contribute --run-log my_run.json
 ```
 
-Or run the benchmarks directly via SageQuant:
-```bash
-sage-quant contribute --benchmark --model-size 13b --hardware a100-40gb \
-  --engine sglang --quant-algo awq --model your-org/your-model
-```
-
 ---
 
 ## CLI Reference
@@ -135,5 +129,37 @@ sage-quant serve-config --model-size SIZE --hardware HW --model NAME [--out FILE
 sage-quant list-hardware
 sage-quant list-engines
 sage-quant list-quant-algos
-sage-quant contribute   [--run-log FILE] [--benchmark --model-size SIZE --hardware HW --engine ENG --quant-algo ALGO --model NAME]
+sage-quant contribute   --run-log FILE
 ```
+
+---
+
+## Behavior Notes
+
+### What happens when constraints can't be satisfied?
+
+If no benchmark combination passes both `--max-latency` and `--min-quality` (e.g. you request 1ms latency and 100% quality), the CLI exits with:
+
+```
+no matching data — try a different hardware or looser quality bound
+```
+
+Exit code is `1`. No silent fallback, no fudged result.
+
+### Input format and case sensitivity
+
+- `--hardware` is **case-insensitive**: `A100-40GB`, `a100-40gb`, `a100-40GB` are all treated identically.
+- `--model-size` accepts both `7b` and `7B` (case-insensitive) as well as bare floats like `7.0`.
+- `--max-latency` accepts `200ms`, `0.2s`, or bare `200` (assumed ms).
+
+### Constraint hierarchy when no exact match exists
+
+If no row in the dataset exactly matches your hardware + model size, the recommender interpolates from the closest available data using linear regression on bit-width and model size. The result is labeled `confidence: interpolated`. If the dataset contains no rows for your hardware family at all, it falls back to the full dataset and labels the result accordingly.
+
+### Interpolation without `[advanced]` extra
+
+Interpolation uses a **pure-Python linear regression** fallback and does not require `scikit-learn`. Installing `pip install sage-quant[advanced]` enables numpy-accelerated paths and the optional Streamlit explorer, but is not required for any CLI command.
+
+### Tie-breaking
+
+When two configurations score identically (same quality delta, same throughput/latency ratio), the one with **lower p95 latency** wins. If still tied, insertion order from the dataset is used.

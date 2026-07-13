@@ -76,7 +76,7 @@ sage-quant serve-config --model-size 7b --hardware a100-40gb --model meta-llama/
 - `sage-quant recommend` — Find optimal engine, algorithm, and scheme. Supports `--prompt-tokens`, `--output-tokens`, and `--prefer-engine`.
 - `sage-quant serve-config` — Generate vLLM/SGLang/MLX launch configuration scripts or YAML files.
 - `sage-quant list-hardware` / `list-engines` / `list-quant-algos` — Check what combinations are currently covered in the dataset.
-- `sage-quant contribute` — Append custom benchmark runs (`JSON`/`CSV`) or run automated live tests using `[benchmark]` extra.
+- `sage-quant contribute` — Append custom benchmark runs (`JSON`/`CSV`) to the local dataset and get instructions to open a PR.
 
 ---
 
