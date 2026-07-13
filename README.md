@@ -2,7 +2,6 @@
 
 <p align="center">
   <a href="https://pypi.org/project/sage-quant/"><img src="https://img.shields.io/pypi/v/sage-quant?color=blue&label=PyPI" alt="PyPI version"></a>
-  <a href="https://pepy.tech/projects/sage-quant"><img src="https://static.pepy.tech/personalized-badge/sage-quant?period=total&units=international_system&left_color=black&right_color=green&left_text=downloads" alt="Downloads"></a>
   <a href="https://github.com/aakriti1318/quantsage"><img src="https://img.shields.io/github/stars/aakriti1318/quantsage?style=social" alt="GitHub stars"></a>
   <a href="https://github.com/aakriti1318/quantsage/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License MIT"></a>
 </p>
